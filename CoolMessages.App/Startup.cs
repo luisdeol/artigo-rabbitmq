@@ -1,3 +1,6 @@
+using CoolMessages.App.Consumers;
+using CoolMessages.App.Options;
+using CoolMessages.App.Services;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
@@ -19,6 +22,10 @@ namespace CoolMessages.App
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
+            services.Configure<RabbitMqConfiguration>(Configuration.GetSection("RabbitMqConfig"));
+            services.AddScoped<INotificationService, NotificationService>();
+
+            services.AddHostedService<ProcessMessageConsumer>();
 
             services.AddControllers();
             services.AddSwaggerGen(c =>

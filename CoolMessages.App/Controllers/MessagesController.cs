@@ -1,5 +1,7 @@
 ﻿using CoolMessages.App.Models;
+using CoolMessages.App.Options;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Options;
 using Newtonsoft.Json;
 using RabbitMQ.Client;
 using System.Text;
@@ -10,12 +12,14 @@ namespace CoolMessages.App.Controllers
     public class MessagesController : ControllerBase
     {
         private readonly ConnectionFactory _factory;
-        private const string QUEUE_NAME = "messages";
-        public MessagesController()
+        private readonly RabbitMqConfiguration _config;
+        public MessagesController(IOptions<RabbitMqConfiguration> options)
         {
+            _config = options.Value;
+
             _factory = new ConnectionFactory
             {
-                HostName = "localhost"
+                HostName = _config.Host
             };
         }
 
@@ -27,7 +31,7 @@ namespace CoolMessages.App.Controllers
                 using (var channel = connection.CreateModel())
                 {
                     channel.QueueDeclare(
-                        queue: QUEUE_NAME,
+                        queue: _config.Queue,
                         durable: false,
                         exclusive: false,
                         autoDelete: false,
@@ -38,7 +42,7 @@ namespace CoolMessages.App.Controllers
 
                     channel.BasicPublish(
                         exchange: "",
-                        routingKey: QUEUE_NAME,
+                        routingKey: _config.Queue,
                         basicProperties: null,
                         body: bytesMessage);
                 }
